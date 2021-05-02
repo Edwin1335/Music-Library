@@ -46,15 +46,14 @@ void MusicLibrary::printRepresentation()
 
 SongNode *MusicLibrary::getSong(int pt)
 {
-    std::string errorString = "Song with key pt not found.";
-    return getSong(this->rootNode, errorString, pt);
+    return getSong(this->rootNode, pt);
 }
 
-SongNode *MusicLibrary::getSong(SongNode *gs, string str, int playTime)
+SongNode *MusicLibrary::getSong(SongNode *gs, int playTime)
 {
     if (gs == nullptr)
     {
-        std::cout << str << std::endl;
+        std::cout << "Song with key pt not found." << std::endl;
         return nullptr;
     }
     if (gs->getPlayTime() == playTime)
@@ -63,33 +62,87 @@ SongNode *MusicLibrary::getSong(SongNode *gs, string str, int playTime)
     }
     if (gs->getPlayTime() > playTime)
     {
-        return this->getSong(gs->getRightChild(), str, playTime);
+        return this->getSong(gs->getRightChild(), playTime);
     }
     else
     {
-        return this->getSong(gs->getLeftChild(), str, playTime);
+        return this->getSong(gs->getLeftChild(), playTime);
     }
 }
 
 void MusicLibrary::removeSong(int pt)
 {
-    //implement function
-    /*
-	IMPORTANT
-	When removing node with two children, find replacement from the
-	right subtree
-	*/
+    // Get Song to delete
+    this->rootNode = this->findSongToRemove(this->rootNode, pt);
 }
 
-void MusicLibrary::removeSong(SongNode *rs)
+SongNode* MusicLibrary::findSongToRemove(SongNode *root, int pt)
 {
-    removeSong(rs->getPlayTime());
+    if (root == nullptr)
+    {
+        std::cout << "Song with key pt not found for deletion." << std::endl;
+        return nullptr;
+    }
+    else if (pt > root->getPlayTime())
+    {
+        root->setRightChild(this->findSongToRemove(root->getRightChild(), pt));
+    }
+    else if (pt < root->getPlayTime())
+    {
+        root->setLeftChild(this->findSongToRemove(root->getLeftChild(), pt));
+    }
+    else
+    {
+        this->numSongs--;
+        if (root->getLeftChild() == nullptr and root->getRightChild() == nullptr)
+        {
+            free(root);
+            return nullptr;
+        }
+        else if(root->getLeftChild() == nullptr and root->getRightChild() != nullptr)
+        {
+            SongNode* temp =  root->getRightChild();
+            free(root);
+            return temp;
+        }
+        else if (root->getRightChild() == nullptr and root->getLeftChild() != nullptr)
+        {
+            SongNode *temp = root->getLeftChild();
+            free(root);
+            return temp;
+        }
+        else
+        {
+            SongNode *temp = root->getRightChild();
+            SongNode *prev = temp;
+
+            while(prev->getLeftChild() != nullptr)
+            {
+                temp = prev;
+                prev = prev->getLeftChild();
+            }
+
+            if (prev == temp)
+            {
+                free(temp);
+                return root;
+            }
+            else
+            {
+                prev->setLeftChild(root->getRightChild());
+                temp->setLeftChild(nullptr);
+                root->setRightChild(prev);
+            }
+        }
+        return root;
+    }
 }
 
 bool MusicLibrary::addSong(string title, string artist, string album, int year, int time)
 {
     SongNode *newSong = new SongNode(title, artist, album, year, time);
 
+    this->numSongs++;
     this->rootNode = this->addSong(this->rootNode, newSong);
 
     return true;
@@ -101,14 +154,14 @@ SongNode *MusicLibrary::addSong(SongNode *root, SongNode *song)
     {
         return song;
     }
-    // if (song->getPlayTime() > root->getPlayTime())
-    // {
-    //     root->getRightChild() = this->addSong(root->getRightChild(), song);
-    // }
-    // else
-    // {
-    //     root->getLeftChild() = this->addSong(root->getLeftChild(), song);
-    // }
+    else if (song->getPlayTime() > root->getPlayTime())
+    {
+        root->setRightChild(this->addSong(root->getRightChild(), song));
+    }
+    else
+    {
+        root->setLeftChild(this->addSong(root->getLeftChild(), song));
+    }
 
     return root;
 }
@@ -186,3 +239,4 @@ void MusicLibrary::cleanupSongs(int playtime)
 	Remove only nodes which have STRICTLY less than (<) playtime
 	*/
 }
+

@@ -12,8 +12,9 @@ private:
 	int numSongs;
 	SongNode* rootNode;
     SongNode *addSong(SongNode *root, SongNode *song);
-    void removeSong(SongNode *rs);
-    SongNode *getSong(SongNode *gs, string, int);
+    SongNode *findSongToRemove(SongNode *rs, int);
+    void removeSong(SongNode *s);
+    SongNode *getSong(SongNode *gs, int);
 
 public:
 	MusicLibrary();

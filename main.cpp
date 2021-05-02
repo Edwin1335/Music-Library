@@ -14,10 +14,9 @@ int main(int argc, char** argv)
     cin >> filename;
 
     MusicLibrary *mylibrary = new MusicLibrary();
-
-    // mylibrary->readSongsFromFile(filename);
-    // mylibrary->printRepresentation();
-    // delete mylibrary;
+    mylibrary->readSongsFromFile(filename);
+    mylibrary->printRepresentation();
+    delete mylibrary;
 
     return 0;
 }
