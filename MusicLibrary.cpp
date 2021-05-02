@@ -62,11 +62,11 @@ SongNode *MusicLibrary::getSong(SongNode *gs, int playTime)
     }
     if (gs->getPlayTime() > playTime)
     {
-        return this->getSong(gs->getRightChild(), playTime);
+        return this->getSong(gs->getLeftChild(), playTime);
     }
     else
     {
-        return this->getSong(gs->getLeftChild(), playTime);
+        return this->getSong(gs->getRightChild(), playTime);
     }
 }
 
@@ -76,7 +76,7 @@ void MusicLibrary::removeSong(int pt)
     this->rootNode = this->findSongToRemove(this->rootNode, pt);
 }
 
-SongNode* MusicLibrary::findSongToRemove(SongNode *root, int pt)
+SongNode *MusicLibrary::findSongToRemove(SongNode *root, int pt)
 {
     if (root == nullptr)
     {
@@ -96,12 +96,11 @@ SongNode* MusicLibrary::findSongToRemove(SongNode *root, int pt)
         this->numSongs--;
         if (root->getLeftChild() == nullptr and root->getRightChild() == nullptr)
         {
-            free(root);
             return nullptr;
         }
-        else if(root->getLeftChild() == nullptr and root->getRightChild() != nullptr)
+        else if (root->getLeftChild() == nullptr and root->getRightChild() != nullptr)
         {
-            SongNode* temp =  root->getRightChild();
+            SongNode *temp = root->getRightChild();
             free(root);
             return temp;
         }
@@ -114,28 +113,18 @@ SongNode* MusicLibrary::findSongToRemove(SongNode *root, int pt)
         else
         {
             SongNode *temp = root->getRightChild();
-            SongNode *prev = temp;
+            SongNode *trav = temp;
 
-            while(prev->getLeftChild() != nullptr)
+            while (trav->getLeftChild() != nullptr)
             {
-                temp = prev;
-                prev = prev->getLeftChild();
+                trav = trav->getLeftChild();
             }
-
-            if (prev == temp)
-            {
-                free(temp);
-                return root;
-            }
-            else
-            {
-                prev->setLeftChild(root->getRightChild());
-                temp->setLeftChild(nullptr);
-                root->setRightChild(prev);
-            }
+            trav->setLeftChild(root->getLeftChild());
+            free(root);
+            return temp;
         }
-        return root;
     }
+    return root;
 }
 
 bool MusicLibrary::addSong(string title, string artist, string album, int year, int time)
@@ -233,10 +222,41 @@ int MusicLibrary::getNumSongsInFile(string filename)
 
 void MusicLibrary::cleanupSongs(int playtime)
 {
-    //implement function
-    /*
-	IMPORTANT
-	Remove only nodes which have STRICTLY less than (<) playtime
-	*/
+    this->rootNode = this->deleteTree(this->rootNode, playtime);
 }
 
+SongNode *MusicLibrary::deleteTree(SongNode *root, int playTime)
+{
+    // Base Case
+    if (root == nullptr)
+        return nullptr;
+
+    root->setLeftChild(deleteTree(root->getLeftChild(), playTime));
+    root->setRightChild(deleteTree(root->getRightChild(), playTime));
+
+    // Now fix the root.  There are 2 possible cases for root
+    // 1.a) Root's key is smaller than min value (root is not in range)
+    if (root->getPlayTime() < playTime)
+    {
+        SongNode *rChild = root->getRightChild();
+        this->numSongs--;
+        delete root;
+        return rChild;
+    }
+
+    // 2. Root is in range
+    return root;
+}
+
+void MusicLibrary::deleteSubTree(SongNode *node)
+{
+    if (node == nullptr)
+        return;
+
+    /* first delete both subtrees */
+    deleteSubTree(node->getLeftChild());
+    deleteSubTree(node->getRightChild());
+
+    /* then delete the node */
+    delete node;
+}
